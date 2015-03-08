@@ -147,7 +147,7 @@ lattice::lattice(int ndim, int size, short q){
 }
 
 void lattice::randomize(){
-  for(int i=0;i<_lattice.size();i++){
+  for(unsigned long i=0;i<_lattice.size();i++){
     _lattice[i]=randomSpin();
   }
 }
@@ -171,7 +171,7 @@ spin lattice::get(location site) const{
 }
 
 spin lattice::get(int index) const{
-  if((index < _lattice.size()) and (index >= 0)){
+  if((index < static_cast<int>(_lattice.size())) and (index >= 0)){
     return _lattice[index];
   }
   else{
@@ -185,7 +185,7 @@ void lattice::flip(location site, spin newValue){
 }
 
 void lattice::flip(int index, spin newValue){
-  if((index < _lattice.size()) and (index >= 0)){
+  if((index < static_cast<int>(_lattice.size())) and (index >= 0)){
     if((newValue <= _q) and (newValue > 0)){
       _lattice[index]=newValue;
       _total_flips++;
@@ -201,7 +201,7 @@ double lattice::magnetization(bool mean){
   if(_total_flips > _magLastCheckSize){
     double re=0;
     double im=0;
-    for(int i=0;i<_lattice.size();i++){
+    for(unsigned long i=0;i<_lattice.size();i++){
       re+=cos_LatticeAngle(_lattice[i]);
       im+=sin_LatticeAngle(_lattice[i]);
     }
@@ -226,7 +226,7 @@ double lattice::correlation(int length, bool mean){
     probes[length].points.resize(totalPoints);
     probe*tprobe=&probes[length];
     location site0(_ndim,_size);
-    for(int i=0;i<totalPoints;i++){
+    for(int i=0;i<static_cast<int>(totalPoints);i++){
       site0.randomize();
       tprobe->zeros[i]=site0.index();
       tprobe->points[i].resize(_ndim);
@@ -239,18 +239,23 @@ double lattice::correlation(int length, bool mean){
   }
 
   probe * lprobe=&probes[length];
-  double norm=1/(lprobe->totalPoints);
+  double norm=_q/((_q-1)*(lprobe->totalPoints));
+  double corrvalue=(1-(1/_q));
+  double uncorrvalue=-(1/_q);
   
-  double re=0;
-  double im=0;
-  for(int i=0;i<lprobe->zeros.size();i++){
-    for(int j=0;j<lprobe->points[0].size();j++){
-      re+=cos_LatticeAngle(_lattice[lprobe->zeros[i]]+_lattice[lprobe->points[i][j]]);
-      im+=sin_LatticeAngle(_lattice[lprobe->zeros[i]]+_lattice[lprobe->points[i][j]]);
+  //double re=0;
+  //double im=0;
+  double val=0;
+  for(unsigned long i=0;i<lprobe->zeros.size();i++){
+    for(unsigned long j=0;j<lprobe->points[0].size();j++){
+      //re+=cos_LatticeAngle(_lattice[lprobe->zeros[i]]+_lattice[lprobe->points[i][j]]);
+      //im+=sin_LatticeAngle(_lattice[lprobe->zeros[i]]+_lattice[lprobe->points[i][j]]);
+      val += (_lattice[lprobe->zeros[i]]==_lattice[lprobe->points[i][j]]) ? corrvalue : uncorrvalue;
     }
   }
-  lprobe->correlation.push_back(sqrt(pow(re,2)+pow(im,2))*norm);
-  
+  //lprobe->correlation.push_back(sqrt(pow(re,2)+pow(im,2))*norm);
+  lprobe->correlation.push_back(norm*val);
+
   if(mean){
     lprobe->correlationMean=chainMean(lprobe->correlation);
     return lprobe->correlationMean-pow(magnetization(CALCMEAN),2);
@@ -307,7 +312,7 @@ void lattice::display(FILE *outfile) const{
   if(outfile != NULL){
     _display_calls++;
     fprintf(outfile,"- Display Call %lu Start -\n",_display_calls);
-    for(int i=0;i<_lattice.size();i++){
+    for(unsigned long i=0;i<_lattice.size();i++){
       if(i % twoDsize == 0){
 	if(i > 0)
 	  fprintf(outfile,"\n");
@@ -331,7 +336,7 @@ double lattice::chainMean(vector<double> chain){
   if(chain.size() == 1){
     return chain[0];
   }
-  for(int i=chain.size()/2;i<chain.size();i++){
+  for(unsigned long i=chain.size()/2;i<chain.size();i++){
     retval+=chain[i];
   }
   retval/=static_cast<double>(chain.size()-chain.size()/2);

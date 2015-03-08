@@ -7,9 +7,9 @@ modelValues::modelValues(int nmodels, int ncorr){
 }
 
 void modelValues::populate(vector<lattice> &models){
-  for(int i=0;i<models.size();i++){
+  for(unsigned long i=0;i<models.size();i++){
     magnetization[i]=models[i].magnetization(true);
-    for(int j=0;j<correlation.size();j++){
+    for(unsigned long j=0;j<correlation.size();j++){
       correlation[j][i]=models[i].correlation(j,true);
     }
   }
@@ -20,7 +20,7 @@ bool modelValues::converged(FILE *outfile){
   bool retval=true;
   double mean = magnetization.sum()/static_cast<double>(magnetization.size());
   fprintf(outfile,"Mean %f\t",mean);
-  for(int i=0;i<correlation.size();i++){
+  for(unsigned long i=0;i<correlation.size();i++){
     mean = correlation[i].sum()/static_cast<double>(correlation[i].size());
     fprintf(outfile,"%f\t",mean);
   }
@@ -31,7 +31,7 @@ bool modelValues::converged(FILE *outfile){
   if(CI > _limit)
     retval=false;
   fprintf(outfile,"CI %f\t",CI);
-  for(int i=0;i<correlation.size();i++){
+  for(unsigned long i=0;i<correlation.size();i++){
     CI = (correlation[i].max()-correlation[i].min());
     fprintf(outfile,"%f\t",CI);
     if(CI > _limit)
@@ -49,7 +49,7 @@ void modelValues::printResults(double temp, FILE *outfile){
 
   fprintf(outfile,"T \tM eM \tCorrelation eC\n");
   fprintf(outfile,"%f\t%f %f\t",temp,mean,CI);
-  for(int i=0;i<correlation.size();i++){
+  for(unsigned long i=0;i<correlation.size();i++){
     mean = correlation[i].sum()/static_cast<double>(correlation[i].size());
     CI = (correlation[i].max()-correlation[i].min());
     fprintf(outfile,"%f %f\t",mean,CI);
@@ -58,9 +58,9 @@ void modelValues::printResults(double temp, FILE *outfile){
 }
 
 void modelValues::print(FILE *outfile){
-  for(int i=0;i<magnetization.size();i++){
-    fprintf(outfile,"%i %f\t",i,magnetization[i]);
-    for(int j=0;j<correlation.size();j++)
+  for(unsigned long i=0;i<magnetization.size();i++){
+    fprintf(outfile,"%lu %f\t",i,magnetization[i]);
+    for(unsigned long j=0;j<correlation.size();j++)
       fprintf(outfile,"%f\t",correlation[j][i]);
     fprintf(outfile,"\n");
   }

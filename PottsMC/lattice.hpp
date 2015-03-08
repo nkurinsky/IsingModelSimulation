@@ -40,7 +40,7 @@ public:
   void indices(vector<int> array);
   void print();
   void neighbor(location &nb, int dim, int distance);
-  const int ndim() const { return _ndim; };
+  int ndim() const { return _ndim; };
  private:
   int _ndim;
   int _size;
