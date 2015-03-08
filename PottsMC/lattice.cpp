@@ -217,9 +217,9 @@ double lattice::magnetization(bool mean){
 }
 
 double lattice::correlation(int length, bool mean){
-  //static unordered_map<int,probe> probes;
   static double latticeSize=static_cast<double>(pow(_size,_ndim));
   static double totalPoints=((latticeSize/4) > SITE_LIMIT) ? SITE_LIMIT : latticeSize/4;
+  static bool called=false;
   
   if(probes.count(length) == 0){
     probes[length].zeros.resize(totalPoints);
@@ -239,22 +239,28 @@ double lattice::correlation(int length, bool mean){
   }
 
   probe * lprobe=&probes[length];
-  double norm=_q/((_q-1)*(lprobe->totalPoints));
-  double corrvalue=(1-(1/_q));
-  double uncorrvalue=-(1/_q);
+  static double q=static_cast<double>(_q);
+  static double norm=q/(q-1)/(lprobe->totalPoints);
+  static double uncorrvalue=-1/q;
+  static double corrvalue=1+uncorrvalue;
+
+  if(not called){
+    printf("Norm : %f, UC: %f, C: %f\n",norm,uncorrvalue,corrvalue);
+  }
   
-  //double re=0;
-  //double im=0;
   double val=0;
   for(unsigned long i=0;i<lprobe->zeros.size();i++){
     for(unsigned long j=0;j<lprobe->points[0].size();j++){
-      //re+=cos_LatticeAngle(_lattice[lprobe->zeros[i]]+_lattice[lprobe->points[i][j]]);
-      //im+=sin_LatticeAngle(_lattice[lprobe->zeros[i]]+_lattice[lprobe->points[i][j]]);
       val += (_lattice[lprobe->zeros[i]]==_lattice[lprobe->points[i][j]]) ? corrvalue : uncorrvalue;
     }
   }
-  //lprobe->correlation.push_back(sqrt(pow(re,2)+pow(im,2))*norm);
   lprobe->correlation.push_back(norm*val);
+
+  if(not called){
+    printf("Norm : %f, UC: %f, C: %f\n",norm,uncorrvalue,corrvalue);
+    printf("Val: %f, ValNormed: %f",val,lprobe->correlation.back());
+    called=true;
+  }
 
   if(mean){
     lprobe->correlationMean=chainMean(lprobe->correlation);

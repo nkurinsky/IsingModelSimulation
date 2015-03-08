@@ -4,15 +4,21 @@ modelValues::modelValues(int nmodels, int ncorr){
   magnetization.resize(nmodels);
   correlation.resize(ncorr,valarray<double>(nmodels));
   _limit=0.01;
+  _zerolimit=0.0001;
 }
 
 void modelValues::populate(vector<lattice> &models){
   for(unsigned long i=0;i<models.size();i++){
-    magnetization[i]=models[i].magnetization(true);
+    magnetization[i]=(models[i].magnetization(true) > _limit) ? models[i].magnetization(true) : 0;
     for(unsigned long j=0;j<correlation.size();j++){
-      correlation[j][i]=models[i].correlation(j,true);
+      correlation[j][i]=(models[i].correlation(j,true) > _limit) ? models[i].correlation(j,true) : 0;
     }
   }
+}
+
+void modelValues::setLimit(double limit){
+  _limit=limit;
+  _zerolimit=0.01*limit;
 }
 
 bool modelValues::converged(FILE *outfile){

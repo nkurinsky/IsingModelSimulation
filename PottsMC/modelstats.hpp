@@ -13,7 +13,7 @@ class modelValues{
 public:
   modelValues(int nmodels, int ncorr);
   void populate(vector<lattice> &models);
-  void setLimit(double limit){ _limit=limit;};
+  void setLimit(double limit);
   bool converged(FILE *outfile=stdout);
   void printResults(double temp, FILE *outfile=stdout);
   void print(FILE *outfile=stdout);
@@ -22,6 +22,7 @@ public:
   vector<valarray<double> > correlation;
 private:
   double _limit;
+  double _zerolimit;
 };
 
 #endif
