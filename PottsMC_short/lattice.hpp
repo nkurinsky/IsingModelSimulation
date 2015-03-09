@@ -18,7 +18,7 @@
 
 using namespace std;
 
-typedef char spin;
+typedef short spin;
 
 struct probe{
   probe();
@@ -51,7 +51,7 @@ public:
 
 class lattice{
 public:
-  lattice(int ndim, int size, char q=2);
+  lattice(int ndim, int size, short q=2);
   void randomize();
   void setTemp(double T);
   spin randomSpin();
@@ -74,7 +74,7 @@ private:
   double _T;
   float _pBond;
   short _ndim;
-  char _q;
+  short _q;
   short _size;
   unsigned long _total_flips;
   mutable unsigned long _display_calls;

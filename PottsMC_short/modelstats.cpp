@@ -9,9 +9,9 @@ modelValues::modelValues(int nmodels, int ncorr){
 
 void modelValues::populate(vector<lattice> &models){
   for(unsigned long i=0;i<models.size();i++){
-    magnetization[i]=(models[i].magnetization(true) > _zerolimit) ? models[i].magnetization(true) : 0;
+    magnetization[i]=(models[i].magnetization(true) > _limit) ? models[i].magnetization(true) : 0;
     for(unsigned long j=0;j<correlation.size();j++){
-      correlation[j][i]=(models[i].correlation(j,true) > _zerolimit) ? models[i].correlation(j,true) : 0;
+      correlation[j][i]=(models[i].correlation(j,true) > _limit) ? models[i].correlation(j,true) : 0;
     }
   }
 }

@@ -128,7 +128,7 @@ void location::neighbor(location &nb, int dim, int distance){
   nb.set_index(index(dim,distance));
 }
 
-lattice::lattice(int ndim, int size, char q){
+lattice::lattice(int ndim, int size, short q){
   _ndim=ndim;
   _size=size;
   _q=q;

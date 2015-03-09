@@ -15,7 +15,7 @@
 #define N5DMODELS 3
 
 #define MAX_THREADS 5
-#define MAX_ITERATIONS 100000
+#define MAX_ITERATIONS 10000
 
 using namespace std;
 
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
 
   int dimension=atoi(argv[1]);
   int size=atoi(argv[2]);
-  char q=static_cast<char>(atoi(argv[3]));
+  short q=static_cast<short>(atoi(argv[3]));
   double T=atof(argv[4]);
   bool filewrite=false;
   FILE * outfile=stdout;
@@ -100,12 +100,10 @@ int main(int argc, char *argv[]){
   }
   if(iter < MAX_ITERATIONS)
     fprintf(outfile,"\nConverged!\n");
-  else
-    fprintf(outfile,"\nDid not converge in %i iterations\n",MAX_ITERATIONS);
-  
+
   vals.print(outfile);
   vals.printResults(T,outfile);
-  
+
   if(filewrite){
     fclose(outfile);
   }
