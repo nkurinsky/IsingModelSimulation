@@ -11,6 +11,9 @@
 #define NMODELS 5
 #define CORR_MAX 10
 
+#define N4DMODELS 3
+#define N5DMODELS 3
+
 #define MAX_THREADS 5
 #define MAX_ITERATIONS 10000
 
@@ -43,25 +46,40 @@ int main(int argc, char *argv[]){
     }
   }
   
+  int modelnum=NMODELS;
+  if(dimension > 3){
+    if(dimension == 4){
+      modelnum=N4DMODELS
+	}
+    else if(dimension == 5){
+      modelnum=N5DMODELS
+	}
+    else{
+      fprintf(stderr,"Dimension number %i too large, will max out memory\n");
+      exit(3);
+    }
+  }
+
   int N=pow(size,dimension);
   int ncorr = (size/2 > CORR_MAX) ? CORR_MAX : size/2 ;
-  modelValues vals(NMODELS,ncorr);
+  modelValues vals(modelnum,ncorr);
   vals.setLimit(0.01);
 
   fprintf(outfile,"Simulation Parameters:\n");
   fprintf(outfile,"\tDimensions:   %i\n",dimension);
   fprintf(outfile,"\tLattice Size: %i\n",size);
   fprintf(outfile,"\tPotts States: %i\n",q);
-  fprintf(outfile,"\tTemperature:  %f\n\n",T);
+  fprintf(outfile,"\tTemperature:  %f\n",T);
+  fprintf(outfile,"\tLattices:     %i\n\n",modelnum);
 
   vector<lattice> models;
   models.clear();
-  for(int i=0;i<NMODELS;i++){
+  for(int i=0;i<modelnum;i++){
     models.push_back(lattice(dimension,size,q));
     models[i].setTemp(T);
     models[i].flipCluster(10*N);
-  }
-
+  }    
+  
   vals.printHeader(outfile);
   vals.populate(models);
   vals.print(outfile);
