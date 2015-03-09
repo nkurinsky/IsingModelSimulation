@@ -47,15 +47,20 @@ int main(int argc, char *argv[]){
   }
   
   int modelnum=NMODELS;
+  if(dimension < 1){
+    printf("Invalid number of dimensions (Entered %i, range 1-5)\n",dimension);
+    exit(3);
+  }
+
   if(dimension > 3){
     if(dimension == 4){
-      modelnum=N4DMODELS
+      modelnum=N4DMODELS;
 	}
     else if(dimension == 5){
-      modelnum=N5DMODELS
+      modelnum=N5DMODELS;
 	}
     else{
-      fprintf(stderr,"Dimension number %i too large, will max out memory\n");
+      fprintf(stderr,"Dimension number %i too large, will max out memory\n",dimension);
       exit(3);
     }
   }
