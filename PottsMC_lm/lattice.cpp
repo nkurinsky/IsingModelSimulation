@@ -30,72 +30,63 @@ location::location(const location &obj){
   _indices=obj._indices;
 }
 
-void location::set_index(int index){
-  if (index < _index_max){
-    int index_temp=index;
-    for(int i=0;i<_ndim;i++){
-      _indices[i]=index_temp % _size;
-      index_temp=index_temp/_size;
-    }
-  }
-  else{
-    printf("Invalid index passed to location::set_index\n");
-    throw(1);
-  }
-}
-
-void location::move(int dim, int distance){
-  set_index(index(dim,distance));
-}
-
 void location::randomize(){
   for(int i=0;i<_ndim;i++){
     _indices[i]=rand() % _size;
   }
 }
 
-int location::index(int dim, int distance){
-  static map< vector<int>, int> _1d_indices;
-  static bool initialized=false;
-  
-  if(not initialized){
-    vector<int> _tindices;
-    _tindices.resize(_ndim,0);
-    //initialize lookup table
-    int j;
-    bool done=false;
-    while(not done){
-      _1d_indices[_tindices]=0;
-      for(j=0;j<_ndim;j++){
-	_1d_indices[_tindices]+=_dim_step[j]*_tindices[j];
-      }
-      
-      _tindices[0]++;
-      for(j=0;j<_ndim;j++){
-	if(_tindices[j] == _size){
-	  _tindices[j]=0;
-	  if(j+1<_ndim)
-	    _tindices[j+1]++;
-	  else
-	    done=true;
-	}
-      }
-    }
-    initialized=true;
-  }
+void location::move(location &obj){
+  _ndim=obj._ndim;
+  _size=obj._size;
+  _indices=obj._indices;
+}
 
-  if(distance == 0)
-    return _1d_indices[_indices];
+void location::move(coords array){
+  if(array.size() == _indices.size()){
+    _indices=array;
+  }
   else{
-    vector<int> irel(_indices);
-    irel[dim]+=distance;
-    while(irel[dim]>_size-1)
-      irel[dim]-=_size;
-    while(irel[dim]<0)
-      irel[dim]+=_size;
-
-    return _1d_indices[irel];
+    fprintf(stderr,"Invalid array passed to location::move\n");
+    exit(10);
   }
+}
+
+void location::move(int dim, int distance){
+  if(dim < 0 or dim >= _ndim){
+    printf("Invalid dimension passed to location::move");
+    exit(10);
+  }
+
+  if (distance != 0){
+    _indices[dim]+=distance;
+    while(_indices[dim]>_size-1)
+      _indices[dim]-=_size;
+    while(_indices[dim]<0)
+      _indices[dim]+=_size;
+  }    
+}
+
+coords location::get(int dim, int distance){
+  static coords tc(_ndim,0);
+
+  if(dim < 0 or dim >= _ndim){
+    printf("Invalid dimension passed to location::get");
+    exit(10);
+  }
+
+  if(distance == 0){
+    return _indices;
+  }    
+
+  tc=_indices;
+  tc[dim]+=distance;
+  while(tc[dim]>_size-1)
+    tc[dim]-=_size;
+  while(tc[dim]<0)
+    tc[dim]+=_size;
+
+  return tc;
 }
 
 void location::indices(vector<int> array){
@@ -111,18 +102,12 @@ void location::print(){
   printf("\tND Indices:");
   for(int i=0;i<_ndim;i++)
     printf(" %i",_indices[i]);
-  printf("\n\t1D Index: %i\n",index());
-}
-
-void location::neighbor(location &nb, int dim, int distance){
-  nb.set_index(index(dim,distance));
 }
 
 lattice::lattice(int ndim, int size, char q){
   _ndim=ndim;
   _size=size;
   _q=q;
-  _lattice.resize(pow(size,ndim));
 
   _T=0;
   _total_flips=0;
@@ -137,8 +122,18 @@ lattice::lattice(int ndim, int size, char q){
 }
 
 void lattice::randomize(){
-  for(unsigned long i=0;i<_lattice.size();i++){
-    _lattice[i]=randomSpin();
+  //needs to size lattice as well
+  coords ct(_ndim,0);
+  
+  while(ct[0] != _size){
+    _lattice[ct]=randomSpin();
+    ct.back()++;
+    for(int i=_ndim-1;i>0;i--){
+      if(ct[i] == _size){
+	ct[i]=0;
+	ct[i-1]++;
+      }
+    }
   }
 }
 
@@ -156,45 +151,34 @@ bool lattice::addBond(){
   return (norm*static_cast<double>(rand()) < _pBond);
 }
 
-spin lattice::get(location site) const{
-  return get(site.index());
-}
-
-spin lattice::get(int index) const{
-  if((index < static_cast<int>(_lattice.size())) and (index >= 0)){
-    return _lattice[index];
-  }
-  else{
-    printf("ERROR: Invalid index %i passed to lattice::flip\n",index);
-    exit(1);
-  }
+spin lattice::get(location site){
+  return _lattice[site.get()];
 }
 
 void lattice::flip(location site, spin newValue){
-  flip(site.index(),newValue);
-}
-
-void lattice::flip(int index, spin newValue){
-  if((index < static_cast<int>(_lattice.size())) and (index >= 0)){
+  if(site.ndim() == _ndim){
     if((newValue <= _q) and (newValue > 0)){
-      _lattice[index]=newValue;
+      _lattice[site.get()]=newValue;
       _total_flips++;
     }
-    else
-      printf("ERROR: Invalid q value %i passed to lattice::flip\n",newValue);
+    else{
+      fprintf(stderr,"ERROR: Invalid q value %i passed to lattice::flip\n",newValue);
+      exit(10);
+    }
   }
   else
-    printf("ERROR: Invalid index %i passed to lattice::flip\n",index);
+    fprintf(stderr,"ERROR: Invalid location passed to lattice::flip\n");
 }
 
 double lattice::magnetization(bool mean){
   if(_total_flips > _magLastCheckSize){
     double re=0;
     double im=0;
-    for(unsigned long i=0;i<_lattice.size();i++){
-      re+=cos_LatticeAngle(_lattice[i]);
-      im+=sin_LatticeAngle(_lattice[i]);
+    for(auto it = _lattice.begin();it != _lattice.end();it++){
+      re+=cos_LatticeAngle(it->second);
+      im+=sin_LatticeAngle(it->second);
     }
+
     magValues.push_back(sqrt(pow(re,2)+pow(im,2))/static_cast<double>(_lattice.size()));
     _magLastCheckSize=_total_flips;
     _lastMagMean=chainMean(magValues);
@@ -217,10 +201,10 @@ double lattice::correlation(int length, bool mean){
     location site0(_ndim,_size);
     for(int i=0;i<static_cast<int>(totalPoints);i++){
       site0.randomize();
-      tprobe->zeros[i]=site0.index();
+      tprobe->zeros[i]=site0.get();
       tprobe->points[i].resize(_ndim);
       for(int j=0;j<_ndim;j++){
-	tprobe->points[i][j]=site0.index(j,length);
+	tprobe->points[i][j]=site0.get(j,length);
       }
     }
     tprobe->totalPoints=totalPoints*static_cast<double>(_ndim);
@@ -250,14 +234,14 @@ double lattice::correlation(int length, bool mean){
 }
 
 bool lattice::correlated(location site1, location site2){
-  return (_lattice[site1.index()] == _lattice[site2.index()]);
+  return (_lattice[site1.get()] == _lattice[site2.get()]);
 }
 
 //Wolf Clustering Algorithm
 int lattice::flipCluster(int Nflips){
   static location site(_ndim,_size);
-  stack<int> clusterSites;
-  int tind;
+  static location tc(_ndim,_size);
+  stack<coords> clusterSites;  
   int flips=0;
 
   while(flips < Nflips){
@@ -269,17 +253,17 @@ int lattice::flipCluster(int Nflips){
     }
     flip(site,newspin);
     flips++;
-    clusterSites.push(site.index());
+    clusterSites.push(site.get());
     while(not clusterSites.empty()){
-      site.set_index(clusterSites.top());
+      site.move(clusterSites.top());
       clusterSites.pop();
       for(int dim=0;dim<_ndim;dim++){
 	for(int dir=-1;dir<2;dir+=2){
-	  tind=site.index(dim,dir);
-	  if((get(tind) == oldspin) and (addBond())){
-	    flip(tind,newspin);
+	  tc.move(site.get(dim,dir));
+	  if((get(tc) == oldspin) and (addBond())){
+	    flip(tc,newspin);
 	    flips++;
-	    clusterSites.push(tind);
+	    clusterSites.push(tc.get());
 	  }
 	}
       }
@@ -290,14 +274,19 @@ int lattice::flipCluster(int Nflips){
   return flips;
 }
 
-void lattice::display(FILE *outfile) const{
+void lattice::display(FILE *outfile){
   int twoDsize=_size*_size;
   string separator(_size*2,'-');
 
   if(outfile != NULL){
     _display_calls++;
     fprintf(outfile,"- Display Call %lu Start -\n",_display_calls);
-    for(unsigned long i=0;i<_lattice.size();i++){
+
+    coords ct(_ndim,0);
+    int i=0;
+
+    while(ct[0] != _size){
+      
       if(i % twoDsize == 0){
 	if(i > 0)
 	  fprintf(outfile,"\n");
@@ -305,8 +294,18 @@ void lattice::display(FILE *outfile) const{
       }
       else if(i % _size == 0)
 	fprintf(outfile,"\n ");
-      fprintf(outfile,"%i ",_lattice[i]);
+      fprintf(outfile,"%i ",_lattice[ct]);
+      
+      ct.back()++;
+      for(int j=_ndim-1;j>0;j--){
+	if(ct[j] == _size){
+	  ct[j]=0;
+	  ct[j-1]++;
+	}
+      }
+      i++;
     }
+
     fprintf(outfile,"\n%s\n",separator.c_str());
     fprintf(outfile,"-  Display Call %lu End  -\n",_display_calls);
   }

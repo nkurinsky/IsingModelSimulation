@@ -2,7 +2,7 @@ CC=g++ -std=c++0x -O1
 CFLAGS=-c -Wall -Wextra
 SOURCES=main.cpp lattice.cpp modelstats.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=PottsMC
+EXECUTABLE=PottsMC_lm
 
 prefix=~/local
 

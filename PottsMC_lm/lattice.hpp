@@ -35,20 +35,17 @@ public:
   location(int ndim, int size);
   location(const location &obj);
   void randomize();
-  void set_location(coords &obj);
-  //void set_index(int index);
+  void move(coords array);
+  void move(location &obj);
   void move(int dim=0, int distance=0);
-  //int index(int dim=0, int distance=0);
   coords get(int dim=0, int distance=0);
   void indices(vector<int> array);
   void print();
-  void neighbor(location &nb, int dim, int distance);
   int ndim() const { return _ndim; };
  private:
   int _ndim;
   int _size;
   coords _indices;
-  coords _temp;
 }; 
 
 class lattice{
@@ -58,7 +55,7 @@ public:
   void setTemp(double T);
   spin randomSpin();
   bool addBond();
-  spin get(location site) const;
+  spin get(location site);
   //spin get(int index) const;
   void flip(location site, spin newValue);
   //void flip(int index, spin newValue);
@@ -67,12 +64,12 @@ public:
   bool correlated(location site1, location site2);
   int flipCluster(int Nflips=1);
   unsigned long flips() const{ return _total_flips;};
-  void display(FILE *outfile=stdout) const;
+  void display(FILE *outfile=stdout);
 private:
   double chainMean(vector<double> chain);
   double cos_LatticeAngle(spin value);
   double sin_LatticeAngle(spin value);
-  valarray<spin> _lattice;
+  map<coords,spin> _lattice;
   double _T;
   float _pBond;
   short _ndim;
