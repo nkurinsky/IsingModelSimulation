@@ -1,4 +1,4 @@
-CC=g++ -std=c++0x -O1
+CC=g++ -std=c++0x -O1 -g
 CFLAGS=-c -Wall -Wextra
 SOURCES=main.cpp lattice.cpp modelstats.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
