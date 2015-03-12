@@ -4,7 +4,7 @@ SOURCES=main.cpp lattice.cpp modelstats.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=PottsMC
 
-prefix=~/local
+prefix=/usr/local
 
 all: $(SOURCES) $(EXECUTABLE) install clean
 
